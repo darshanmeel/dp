@@ -51,10 +51,10 @@ print dt.shape
 print mn.shape
 
 # now subtract the mean
-dt = dt - mn
+#dt = dt - mn
 
-sigma = np.dot(dt,dt.T)/dt.shape[0]
-sigma = np.cov(dt)
+sigma = np.dot(dt,dt.T)/dt.shape[1]
+#sigma = np.cov(dt)
 
 
 u,s,v = linalg.svd(sigma)

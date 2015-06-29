@@ -49,7 +49,7 @@ patchsize = 10
 rng = imgsize-patchsize - 1
 
 sampleimages= []
-for i in range(100):
+for i in range(10000):
     # randomly select the image
     
     img_num = random.randint(0,9)    

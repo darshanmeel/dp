@@ -9,23 +9,26 @@ using numpy matrix multiplication to make things bit easy.
 """
 import numpy as ma
 import numpy
-#from numpy import ma 
+import random
 import math
-import datetime
+
 
 
 def sigmoid(vl):
+    vl = vl*1.0
     return (1/(1+ma.exp(-vl)))
 
 def sigmoid_diff(vl):
-    return sigmoid(vl)* (1-sigmoid(vl))
+
+    #return sigmoid(vl)* (1-sigmoid(vl))
+    return vl * (1-vl)
     
 def tanh(vl):
     e2z = ma.exp(2*vl)
     return ((e2z-1)/(e2z + 1))
 
 def tanh_diff(vl):
-    return (1-ma.power(tanh(vl),2))
+    return (1-ma.power(vl,2))
     
 def linear(x):
     return x
@@ -36,8 +39,8 @@ def linear_diff(x):
 class NN:
     def __init__(self,lyrs,fnc='sigmoid',learning_rate= 1.0,epochs= 1000,outer_fnc= None,Normalize= True,batch_size = 1,wgt_decay = 0,bias= True):
         self.lyrs = lyrs
-        if len(self.lyrs) < 3:
-            raise('There should be more than 2 layers')
+        if len(self.lyrs) < 2:
+            raise('There should be 2 or more layers')
         self.bias = bias 
         self.n_in_layer = 2
         self.Normalize=Normalize
@@ -80,7 +83,7 @@ class NN:
         self.init_weights()
         
 
-        print len(self.wghts)
+    
 
         
             
@@ -89,6 +92,7 @@ class NN:
     def init_weights(self):        
         for i in range(len(self.lyrs) -1):
             ed = math.sqrt(6.0/(self.lyrs[i] + self.lyrs[i+1] + 1))
+            #ed = random.randrange(0,50)/1000.0
             st = -1*ed
             wght = numpy.random.uniform(st,ed,self.lyrs[i+1]*(self.lyrs[i]+1)).reshape(self.lyrs[i+1],(self.lyrs[i]+1))
             self.wghts.append(wght)
@@ -134,6 +138,25 @@ class NN:
          
             outs.append(out)
             diff = ma.array(self.fnc_diff[i](out))
+            '''
+            print
+            print i,'i','diff;'
+            print
+            print diff
+            print
+            print 
+            print diff*0.52373
+            ot = out[0]
+            print 'ot'
+            print
+            print ot
+            print
+            print 'bye'
+            print self.fnc_diff[i](ot)
+            print
+            print 'hi'
+            '''
+            
             diffs.append(diff)
            
         
@@ -151,19 +174,20 @@ class NN:
 
         betas.append(bt)
 
-
+        #print diffs
         for i in range(len(self.lyrs)-2,-1,-1):
-
+            #print i
+            
             bt = betas[-1]
-
-            beta_sums =  ma.sum(self.wghts[i].T.dot(bt))
-        
-          
             wght_delta = ma.multiply(self.eta,bt.dot(outs[i].T))
+            #print wght_delta
+            self.wghts_delta[i] = wght_delta  
+            #print bt
 
-            self.wghts_delta[i] = wght_delta   
-            bt = ma.multiply(diffs[i][0:-1],beta_sums)
+            beta_sums =  self.wghts[i].T.dot(bt)    
+            bt = ma.multiply(diffs[i],beta_sums)[0:-1]
             betas.append(bt)
+        #print betas
 
 
     
@@ -207,24 +231,29 @@ class NN:
 
                 
                 outs,diffs = self.forward_pass(inputs) 
+                
+               
+                
+                
       
 
                 
                 outpt = ma.array(outs[-1][0:-1])
               
-                print targets
-                print
-                print outpt
-                print
+
                 err = ma.subtract(targets.T,outpt)
-                print err
                 
           
-                self.backpropagate(outs,diffs,inputs,err)      
-                self.update_weights()           
+                
+                
+                self.backpropagate(outs,diffs,inputs,err)    
+              
+                
+                self.update_weights() 
+                #print self.wghts
 
                 error = error + ma.sum(err**2)  
-                print error
+                #print error
       
             
             train_error = error/(X.shape[0])
@@ -269,15 +298,34 @@ if __name__ == "__main__":
     
         n_in_layer = train_data.shape[1]
         n_out_layer = train_cls.shape[1]
-        n_hidden_layer = 3
-        print n_out_layer
-    
-        lyrs = [n_in_layer,4,2,n_out_layer]
+
+
+        lyrs = [n_in_layer,2,n_out_layer]
         
-        learning_rate = 0.6
-        wgt_decay=0.1
-        n = NN(lyrs,fnc=fnc,learning_rate=learning_rate,epochs=epochs,Normalize=True,batch_size = 4,outer_fnc='sigmoid',wgt_decay=wgt_decay,bias= True) 
-    
+        learning_rate = 0.9
+        wgt_decay=0.0000
+        n = NN(lyrs,fnc=fnc,learning_rate=learning_rate,epochs=epochs,Normalize=True,batch_size = 1,outer_fnc='sigmoid',wgt_decay=wgt_decay,bias= True) 
+        print     
+        print 'wghts;'
+        print
+        print n.wghts
+        '''
+        n.wghts[0][0,0] = 0.2
+        n.wghts[0][0,1] = 0.3
+        n.wghts[0][0,2] = -0.1
+        
+        n.wghts[0][1,0] = 0.25
+        n.wghts[0][1,1] = -0.1
+        n.wghts[0][1,2] = -0.15
+        
+        n.wghts[1][0,0] = -0.1
+        n.wghts[1][0,1] = 0.2
+        n.wghts[1][0,2] = 0.05
+        print 
+        '''
+        print 'up wghts'
+        print
+        print n.wghts
         train_err,test_err,wghts_after_each_epoch = n.fit(train_data,train_cls,None,None)
         print train_err
         print test_err
@@ -286,13 +334,24 @@ if __name__ == "__main__":
      
 
   
-    
+    '''
     train_dt = numpy.array([[1,0],[1,1],[0,1],[0,0]])
     train_cls = numpy.array([0,1,0,1]).reshape(4,1)
     #train_cls = train_dt
     test_dt = train_dt
     test_cls = train_cls
     train_neural_net(train_dt,train_cls,test_dt,test_cls,epochs =2)
+    '''
+    train_dt = numpy.array([[0,0],[0,1]])
+    train_cls = numpy.array([0,1]).reshape(2,1)
+    #train_cls = train_dt
+    train_dt = numpy.array([[0,0]])
+    train_cls = numpy.array([0]).reshape(1,1)
+    train_dt = numpy.array([[0,0],[0,1],[1,0],[1,1]])
+    train_cls = numpy.array([1,0,0,1]).reshape(4,1)
+    test_dt = train_dt
+    test_cls = train_dt
+    train_neural_net(train_dt,train_cls,test_dt,test_cls,epochs =1000)
         
     
         
